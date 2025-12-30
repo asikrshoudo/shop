@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<h4 class="mb-3"><i class="fas fa-calculator"></i> POS Terminal</h4>
+
+{% if request.args.get('status') == 'success' %}
+<div class="alert alert-success alert-dismissible fade show">
+    <i class="fas fa-check-circle"></i> Sale Completed Successfully!
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+{% elif request.args.get('status') == 'error' %}
+<div class="alert alert-danger">
+    <i class="fas fa-exclamation-triangle"></i> Stock Error or Invalid Product!
+</div>
+{% endif %}
+
+<div class="card p-3 shadow-sm">
+    <form method="POST" id="sellForm">
+        
+        <div class="mb-3">
+            <label class="form-label fw-bold">Product Code</label>
+            <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-barcode"></i></span>
+                <input type="text" id="code_input" name="code" class="form-control form-control-lg" placeholder="Enter Code (e.g. 101)" autocomplete="off" required>
+                <button type="button" class="btn btn-primary" onclick="lookupProduct()">Find</button>
+            </div>
+            <small id="product_display" class="text-success fw-bold mt-1 d-block"></small>
+        </div>
+
+        <div class="row g-2">
+            <div class="col-6">
+                <label class="form-label">Quantity</label>
+                <input type="number" id="qty_input" name="quantity" class="form-control" value="1" min="1" oninput="calculateTotal()">
+            </div>
+            <div class="col-6">
+                <label class="form-label">Total Bill</label>
+                <input type="text" id="total_bill" class="form-control fw-bold bg-light" readonly value="0">
+            </div>
+        </div>
+
+        <hr>
+
+        <div class="mb-3">
+            <label class="form-label text-muted">Cash Received (Customer Paid)</label>
+            <div class="input-group">
+                <span class="input-group-text">Tk</span>
+                <input type="number" id="cash_given" class="form-control" placeholder="0.00" oninput="calculateChange()">
+            </div>
+        </div>
+
+        <div class="alert alert-warning text-center">
+            <small>Return Change:</small>
+            <h2 id="change_display" class="fw-bold mb-0">0.00</h2>
+        </div>
+
+        <button type="submit" class="btn btn-success w-100 btn-lg py-3">
+            <i class="fas fa-check"></i> CONFIRM SALE
+        </button>
+    </form>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let currentPrice = 0;
+
+    // 1. Find Product by Code (AJAX)
+    async function lookupProduct() {
+        let code = document.getElementById('code_input').value;
+        let display = document.getElementById('product_display');
+        
+        if(!code) return;
+
+        let response = await fetch('/get_product/' + code);
+        let data = await response.json();
+
+        if (data.success) {
+            currentPrice = data.price;
+            display.innerText = `Matched: ${data.name} (Price: ${data.price} Tk | Stock: ${data.stock})`;
+            display.classList.remove('text-danger');
+            display.classList.add('text-success');
+            calculateTotal();
+        } else {
+            currentPrice = 0;
+            display.innerText = "❌ Product not found!";
+            display.classList.remove('text-success');
+            display.classList.add('text-danger');
+            calculateTotal();
+        }
+    }
+
+    // 2. Calculate Total Bill
+    function calculateTotal() {
+        let qty = document.getElementById('qty_input').value;
+        let total = currentPrice * qty;
+        document.getElementById('total_bill').value = total;
+        calculateChange();
+    }
+
+    // 3. Calculate Change Return
+    function calculateChange() {
+        let total = parseFloat(document.getElementById('total_bill').value) || 0;
+        let cash = parseFloat(document.getElementById('cash_given').value) || 0;
+        let change = cash - total;
+
+        let changeDisplay = document.getElementById('change_display');
+        changeDisplay.innerText = change.toFixed(2);
+        
+        if(change < 0) {
+            changeDisplay.style.color = 'red'; // Not enough cash
+        } else {
+            changeDisplay.style.color = 'green'; // OK
+        }
+    }
+</script>
+{% endblock %}

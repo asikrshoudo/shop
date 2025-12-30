@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<h4><i class="fas fa-box-open"></i> Inventory</h4>
+
+{% if error %}
+<div class="alert alert-danger">{{ error }}</div>
+{% endif %}
+
+<div class="card p-3 mb-4">
+    <h6 class="text-primary"><i class="fas fa-plus-circle"></i> Add New Product</h6>
+    <form method="POST">
+        <div class="row g-2">
+            <div class="col-4">
+                <label class="form-label small">Code/ID</label>
+                <input type="text" name="code" class="form-control" placeholder="e.g 101" required>
+            </div>
+            <div class="col-8">
+                <label class="form-label small">Product Name</label>
+                <input type="text" name="name" class="form-control" placeholder="e.g Chips" required>
+            </div>
+            
+            <div class="col-4">
+                <label class="form-label small">Buy Price</label>
+                <input type="number" name="buy_price" class="form-control" step="0.01" required>
+            </div>
+            <div class="col-4">
+                <label class="form-label small">Sell Price</label>
+                <input type="number" name="sell_price" class="form-control" step="0.01" required>
+            </div>
+            <div class="col-4">
+                <label class="form-label small">Stock</label>
+                <input type="number" name="stock" class="form-control" required>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-dark w-100 mt-3"><i class="fas fa-save"></i> Save Product</button>
+    </form>
+</div>
+
+<h6 class="text-muted">Stock List</h6>
+<div class="table-responsive">
+    <table class="table table-striped align-middle bg-white rounded shadow-sm">
+        <thead class="table-light">
+            <tr>
+                <th>Code</th>
+                <th>Name</th>
+                <th>Stock</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in products %}
+            <tr>
+                <td><span class="badge bg-secondary">{{ p.code }}</span></td>
+                <td>{{ p.name }} <br> <small class="text-success">{{ p.sell_price }} tk</small></td>
+                <td>
+                    {% if p.stock < 5 %}
+                        <span class="text-danger fw-bold">{{ p.stock }} (Low)</span>
+                    {% else %}
+                        <span class="text-dark">{{ p.stock }}</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}
